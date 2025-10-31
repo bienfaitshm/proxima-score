@@ -36,7 +36,7 @@ jobs:
             #   run: your-test-command
 
             - name: 🚀 Python Semantic Release
-              uses: python-semantic-release/python-semantic-release@latest # Utilisez la dernière version
+              uses: python-semantic-release/python-semantic-release@v9
               with:
                   # Le GITHUB_TOKEN est automatiquement créé par GitHub et a les permissions
                   # 'contents: write' si vous les avez spécifiées dans la section 'permissions' du job.
