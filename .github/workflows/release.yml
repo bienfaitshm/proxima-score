@@ -33,6 +33,23 @@ jobs:
               with:
                   python-version: "3.x"
 
+            - name: ⚙️ Installer les dépendances système nécessaires pour wxPython
+              if: runner.os == 'Linux' # Exécuter uniquement sur Linux
+              run: |
+                  sudo apt-get update
+                  # Paquets de développement GTK+ 3 et autres dépendances courantes pour wxWidgets
+                  sudo apt-get install -y \
+                      libgtk-3-dev \
+                      build-essential \
+                      libjpeg-dev \
+                      libtiff-dev \
+                      libsdl1.2-dev \
+                      libnotify-dev \
+                      libwebkit2gtk-4.0-dev \
+                      freeglut3-dev \
+                      libgstreamer-plugins-base1.0-dev \
+                      libgstreamer1.0-dev
+
             - name: 📦 Installer les dépendances (PyInstaller & Projet)
               run: |
                   python -m pip install --upgrade pip
