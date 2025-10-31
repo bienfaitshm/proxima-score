@@ -60,7 +60,7 @@ jobs:
               # Crée l'exécutable dans le dossier 'dist/' avec un nom unique par OS
               run: |
                   # Nomme le fichier : project_name-os-executable (ex: proxima-scrore-ubuntu-latest)
-                  pyinstaller --onefile main.py -n "proxima-scrore-${{ matrix.os }}"
+                  pyinstaller --onefile --noconsole main.py -n "proxima-scrore-${{ matrix.os }}"
 
             - name: ⬆️ Télécharger l'Artefact de Construction
               # Sauvegarde l'exécutable dans un artefact nommé par l'OS
