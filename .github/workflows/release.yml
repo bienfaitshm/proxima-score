@@ -101,29 +101,26 @@ jobs:
                   path: release-assets/ # Tous les fichiers sont décompressés dans ce dossier
 
             # --- Étape 2 : Détermination de la version et Notes ---
-            - name: ⚙️ Installer et Exécuter Python Semantic Release (Dry Run)
+            - name: 🚀 Python Semantic Release
+              uses: python-semantic-release/python-semantic-release@v9
               id: semantic
-              run: |
-                  pip install python-semantic-release
-
-                  # 1. Génère les notes de version et la version SANS créer de release (Dry Run)
-                  # Utilise le jeton GITHUB_TOKEN pour accéder aux informations de commit si nécessaire
-                  semantic-release publish --dry-run --print-release-notes > release_notes.md
-
-                  # 2. Extrait la version et la stocke comme sortie de l'étape
-                  NEW_VERSION=$(semantic-release version --app-version)
-                  echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  # Le GITHUB_TOKEN est automatiquement créé par GitHub et a les permissions
+                  # 'contents: write' si vous les avez spécifiées dans la section 'permissions' du job.
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  # Exécute la commande 'semantic-release publish' qui inclut
+                  # la détermination de version, le tag, le commit des changements de version
+                  # et la création de la release GitHub.
+                  # Si vous publiez sur PyPI, cela le fera aussi si configuré.
 
             # --- Étape 3 : Création de la Release GitHub avec Assets ---
             - name: 🚀 Créer la Release GitHub et Attacher les Exécutables
-              # Condition: N'exécute que si une nouvelle version (NEW_VERSION) a été déterminée par 'semantic-release'
-              if: steps.semantic.outputs.new_version != ''
+              # Condition: N'exécute que si une nouvelle version a été déterminée par 'semantic-release'
+              if: steps.semantic.outputs.version != ''
               uses: softprops/action-gh-release@v1
               with:
-                  tag_name: ${{ steps.semantic.outputs.new_version }}
-                  name: Release ${{ steps.semantic.outputs.new_version }}
+                  tag_name: ${{ steps.semantic.outputs.version }}
+                  name: Release ${{ steps.semantic.outputs.version }}
                   body_path: release_notes.md # Utilise le changelog généré
                   # Attache tous les fichiers trouvés sous 'release-assets/'
                   files: release-assets/**/*
