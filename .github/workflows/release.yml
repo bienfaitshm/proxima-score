@@ -1,0 +1,47 @@
+name: Release
+
+on:
+    push:
+        # Déclenche le workflow lors d'un push sur la branche principale
+        # Changez 'main' si votre branche est nommée différemment (ex: master)
+        branches:
+            - main
+
+jobs:
+    release:
+        # Permissions nécessaires pour créer des releases GitHub et des tags
+        permissions:
+            contents: write
+
+        runs-on: ubuntu-latest
+        steps:
+            - name: ⬇️ Checkout code
+              uses: actions/checkout@v4
+              with:
+                  # Nécessaire pour analyser l'historique complet des commits
+                  fetch-depth: 0
+
+            - name: 🐍 Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.x" # Choisissez votre version de Python
+
+            # Optionnel : Installez vos dépendances et exécutez vos tests
+            # - name: 📦 Install dependencies
+            #   run: |
+            #     pip install your-package-manager-here
+            #     ...
+
+            # - name: 🧪 Run tests
+            #   run: your-test-command
+
+            - name: 🚀 Python Semantic Release
+              uses: python-semantic-release/python-semantic-release@latest # Utilisez la dernière version
+              with:
+                  # Le GITHUB_TOKEN est automatiquement créé par GitHub et a les permissions
+                  # 'contents: write' si vous les avez spécifiées dans la section 'permissions' du job.
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  # Exécute la commande 'semantic-release publish' qui inclut
+                  # la détermination de version, le tag, le commit des changements de version
+                  # et la création de la release GitHub.
+                  # Si vous publiez sur PyPI, cela le fera aussi si configuré.
