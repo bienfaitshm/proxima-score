@@ -21,7 +21,7 @@ jobs:
         strategy:
             fail-fast: false # Permet aux autres builds de continuer même si l'un échoue
             matrix:
-                # Construit pour les trois systèmes d'exploitation principaux
+                # Construit pour les deux systèmes d'exploitation principaux
                 os: [windows-latest, macos-latest]
 
         steps:
@@ -100,31 +100,29 @@ jobs:
               with:
                   path: release-assets/ # Tous les fichiers sont décompressés dans ce dossier
 
-            # --- Étape 2 : Détermination de la version et Notes ---
-            - name: 🚀 Python Semantic Release
+            # --- Étape 1.5 (NOUVEAU) : Déplacer les exécutables ---
+            # Ceci est CRUCIAL car actions/download-artifact@v4 crée des sous-dossiers.
+            - name: 📁 Déplacer les exécutables à la racine de 'release-assets'
+              run: |
+                  echo "Déplacement des fichiers pour un chemin d'upload clair..."
+                  # Déplace le contenu de tous les sous-dossiers directement dans 'release-assets/'
+                  find release-assets/ -mindepth 2 -maxdepth 2 -type f -exec mv {} release-assets/ \;
+                  # Nettoyer les sous-dossiers vides (windows-latest-build-artifact, macos-latest-build-artifact)
+                  find release-assets/ -mindepth 1 -type d -empty -delete
+
+            # --- Étape 2 : Détermination de la version et Tagging ---
+            - name: 🚀 Python Semantic Release (Détermination de version et Création de Tag)
               uses: python-semantic-release/python-semantic-release@v10.4.1
               id: semantic
               with:
-                  # Le GITHUB_TOKEN est automatiquement créé par GitHub et a les permissions
-                  # 'contents: write' si vous les avez spécifiées dans la section 'permissions' du job.
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   git_committer_name: "github-actions"
                   git_committer_email: "actions@users.noreply.github.com"
 
-                  # Exécute la commande 'semantic-release publish' qui inclut
-                  # la détermination de version, le tag, le commit des changements de version
-                  # et la création de la release GitHub.
-                  # Si vous publiez sur PyPI, cela le fera aussi si configuré.
+            # --- Étape 3 (SUPPRIMÉE : L'étape 'Publish | Upload' n'est pas nécessaire et était redondante) ---
 
-            - name: Publish | Upload to GitHub Release Assets
-              uses: python-semantic-release/publish-action@v10.4.1
-              if: steps.semantic.outputs.released == 'true'
-              with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  tag: ${{ steps.semantic.outputs.tag }}
-
-            # --- Étape 3 : Création de la Release GitHub avec Assets ---
-            - name: 🚀 Créer la Release GitHub et Attacher les Exécutables
+            # --- Étape 4 : Création de la Release GitHub et Attacher les Exécutables (CORRIGÉ) ---
+            - name: 📦 Créer la Release GitHub et Attacher les Exécutables
               # Condition: N'exécute que si une nouvelle version a été déterminée par 'semantic-release'
               if: steps.semantic.outputs.version != ''
               uses: softprops/action-gh-release@v1
@@ -132,7 +130,7 @@ jobs:
                   tag_name: ${{ steps.semantic.outputs.tag }}
                   name: Release ${{ steps.semantic.outputs.version }}
                   body: ${{steps.semantic.outputs.release_notes}} # Utilise le changelog généré
-                  # Attache tous les fichiers trouvés sous 'release-assets/'
-                  files: release-assets/**/*
+                  # Maintenant, les fichiers sont directement dans 'release-assets/', ce qui est plus sûr.
+                  files: release-assets/*
                   draft: false
                   prerelease: false
