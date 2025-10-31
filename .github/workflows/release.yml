@@ -22,7 +22,7 @@ jobs:
             fail-fast: false # Permet aux autres builds de continuer même si l'un échoue
             matrix:
                 # Construit pour les trois systèmes d'exploitation principaux
-                os: [ubuntu-latest, windows-latest, macos-latest]
+                os: [windows-latest, macos-latest]
 
         steps:
             - name: ⬇️ Checkout code
