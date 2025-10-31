@@ -1,0 +1,9 @@
+-i https://pypi.org/simple
+altgraph==0.17.4
+packaging==25.0; python_version >= '3.8'
+pefile==2023.2.7; python_full_version >= '3.6.0'
+pyinstaller==6.16.0; python_version < '3.15' and python_version >= '3.8'
+pyinstaller-hooks-contrib==2025.9; python_version >= '3.8'
+pywin32-ctypes==0.2.3; python_version >= '3.6'
+setuptools==80.9.0; python_version >= '3.9'
+wxpython==4.2.4; python_version >= '3.9'
