@@ -7,9 +7,7 @@
 
 ## 🎯 Description du Projet
 
-**Proxima Score** est un outil de simulation et d'optimisation conçu pour aider les étudiants et les jurys académiques à planifier et atteindre un pourcentage global de réussite cible. Son nom s'inspire de **Proxima du Centaure**, symbolisant la recherche du chemin le plus court et le plus précis vers l'objectif.
-
-L'application permet de distribuer de manière algorithmique les points restants à gagner ou les points de délibération nécessaires à travers les différents cours, en tenant compte de la pondération de chaque matière et des objectifs de réussite minimaux.
+Proxima Score est une application de bureau Python/wxPython conçue comme un outil d'optimisation stratégique de la réussite scolaire. Elle calcule et répartit de manière optimale les points à obtenir (ou les points de délibération) sur l'ensemble des cours pour atteindre un pourcentage global cible, tout en respectant les notes minimales requises par matière. C'est le chemin le plus court et le plus précis vers le succès, que ce soit pour la simulation de l'effort restant de l'étudiant ou pour la délibération juste par le jury.
 
 | Contexte | Fonction Principale |
 | :--- | :--- |
