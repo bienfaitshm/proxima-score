@@ -1,0 +1,4 @@
+[project]
+name = "proxima-score"
+version = "0.0.0"  # Set this to the last released version or "0.0.0" for new projects
+description = "A sample Python package"
