@@ -1,4 +1,4 @@
 [project]
 name = "proxima-score"
 version = "0.0.0"  # Set this to the last released version or "0.0.0" for new projects
-description = "A sample Python package"
+description = "Proxima Score est une application de bureau (Python/wxPython) d'optimisation stratégique de la réussite scolaire. Elle calcule la répartition minimale et optimale des points (ou de délibération) nécessaires sur l'ensemble des cours pour atteindre un objectif de pourcentage global, en respectant les contraintes minimales de chaque matière. Un outil précis pour la simulation d'effort étudiant et la délibération de jury."

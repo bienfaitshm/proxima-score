@@ -1,47 +1,114 @@
-name: Release
+name: 🚀 Python Build & Semantic Release
 
+# -----------------------------------------------------------
+# DÉCLENCHEURS
+# -----------------------------------------------------------
 on:
     push:
-        # Déclenche le workflow lors d'un push sur la branche principale
-        # Changez 'main' si votre branche est nommée différemment (ex: master)
+        # Déclenche le workflow uniquement lors d'un push sur la branche 'main'
         branches:
             - main
+    workflow_dispatch: # Permet de démarrer le workflow manuellement
 
+# -----------------------------------------------------------
+# DÉFINITION DES JOBS
+# -----------------------------------------------------------
 jobs:
-    release:
-        # Permissions nécessaires pour créer des releases GitHub et des tags
-        permissions:
-            contents: write
+    ## 🏗️ JOB 1 : Construction Multi-OS (Exécuté en parallèle)
+    build:
+        name: Build (${{ matrix.os }}) 🐍
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false # Permet aux autres builds de continuer même si l'un échoue
+            matrix:
+                # Construit pour les trois systèmes d'exploitation principaux
+                os: [ubuntu-latest, windows-latest, macos-latest]
 
-        runs-on: ubuntu-latest
         steps:
             - name: ⬇️ Checkout code
               uses: actions/checkout@v4
+
+            - name: 🐍 Setup Python
+              uses: actions/setup-python@v5
               with:
-                  # Nécessaire pour analyser l'historique complet des commits
-                  fetch-depth: 0
+                  python-version: "3.x"
+
+            - name: 📦 Installer les dépendances (PyInstaller & Projet)
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt # Assurez-vous d'avoir ce fichier
+                  pip install pyinstaller
+
+            - name: 🔨 Construire l'Application (Exécutable)
+              # Crée l'exécutable dans le dossier 'dist/' avec un nom unique par OS
+              run: |
+                  # Nomme le fichier : project_name-os-executable (ex: proxima-scrore-ubuntu-latest)
+                  pyinstaller --onefile main.py -n "proxima-scrore-${{ matrix.os }}"
+
+            - name: ⬆️ Télécharger l'Artefact de Construction
+              # Sauvegarde l'exécutable dans un artefact nommé par l'OS
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ matrix.os }}-build-artifact # Nom unique pour le téléchargement futur
+                  path: dist/
+                  # RetentionDays: 7 # Optionnel : définir la durée de rétention
+
+    ## 📝 JOB 2 : Publication (Release) - Dépend du succès de TOUS les builds
+    release:
+        name: Semantic Release & Attach Assets 🏷️
+        # S'assure que TOUS les jobs du build doivent réussir avant de continuer
+        needs: build
+        # Exécuté uniquement sur un OS, car il ne crée qu'UNE SEULE release.
+        runs-on: ubuntu-latest
+
+        # Permissions étendues nécessaires pour créer le tag et la release GitHub
+        permissions:
+            contents: write
+
+        steps:
+            - name: ⬇️ Checkout code (avec historique complet)
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Essentiel pour 'python-semantic-release' pour analyser l'historique des commits
 
             - name: 🐍 Set up Python
               uses: actions/setup-python@v5
               with:
-                  python-version: "3.x" # Choisissez votre version de Python
+                  python-version: "3.x"
 
-            # Optionnel : Installez vos dépendances et exécutez vos tests
-            # - name: 📦 Install dependencies
-            #   run: |
-            #     pip install your-package-manager-here
-            #     ...
-
-            # - name: 🧪 Run tests
-            #   run: your-test-command
-
-            - name: 🚀 Python Semantic Release
-              uses: python-semantic-release/python-semantic-release@v9
+            # --- Étape 1 : Téléchargement de TOUS les Artefacts ---
+            - name: 🔽 Télécharger TOUS les Artefacts de Build
+              # Télécharge tous les artefacts créés par le job 'build' dans le répertoire 'release-assets/'
+              uses: actions/download-artifact@v4
               with:
-                  # Le GITHUB_TOKEN est automatiquement créé par GitHub et a les permissions
-                  # 'contents: write' si vous les avez spécifiées dans la section 'permissions' du job.
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  # Exécute la commande 'semantic-release publish' qui inclut
-                  # la détermination de version, le tag, le commit des changements de version
-                  # et la création de la release GitHub.
-                  # Si vous publiez sur PyPI, cela le fera aussi si configuré.
+                  path: release-assets/ # Tous les fichiers sont décompressés dans ce dossier
+
+            # --- Étape 2 : Détermination de la version et Notes ---
+            - name: ⚙️ Installer et Exécuter Python Semantic Release (Dry Run)
+              id: semantic
+              run: |
+                  pip install python-semantic-release
+
+                  # 1. Génère les notes de version et la version SANS créer de release (Dry Run)
+                  # Utilise le jeton GITHUB_TOKEN pour accéder aux informations de commit si nécessaire
+                  semantic-release publish --dry-run --print-release-notes > release_notes.md
+
+                  # 2. Extrait la version et la stocke comme sortie de l'étape
+                  NEW_VERSION=$(semantic-release version --app-version)
+                  echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            # --- Étape 3 : Création de la Release GitHub avec Assets ---
+            - name: 🚀 Créer la Release GitHub et Attacher les Exécutables
+              # Condition: N'exécute que si une nouvelle version (NEW_VERSION) a été déterminée par 'semantic-release'
+              if: steps.semantic.outputs.new_version != ''
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ steps.semantic.outputs.new_version }}
+                  name: Release ${{ steps.semantic.outputs.new_version }}
+                  body_path: release_notes.md # Utilise le changelog généré
+                  # Attache tous les fichiers trouvés sous 'release-assets/'
+                  files: release-assets/**/*
+                  draft: false
+                  prerelease: false
