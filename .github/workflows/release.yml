@@ -123,13 +123,6 @@ jobs:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   tag: ${{ steps.semantic.outputs.tag }}
 
-            - name: Upload | Distribution Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: distribution-artifacts
-                  path: dist
-                  if-no-files-found: error
-
             # --- Étape 3 : Création de la Release GitHub avec Assets ---
             - name: 🚀 Créer la Release GitHub et Attacher les Exécutables
               # Condition: N'exécute que si une nouvelle version a été déterminée par 'semantic-release'
